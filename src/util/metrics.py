@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import ndcg_score
 from tqdm.auto import tqdm
+from sklearn.metrics import ndcg_score
 
 from src.models.recommender import Recommender
 
@@ -22,7 +23,6 @@ def mean_reciprocal_rank(
         test_liked_user_ratings = user_ratings[user_ratings["liked"]]
         test_liked_user_movies = test_liked_user_ratings["movieId"].values
 
-        # movie_ids = np.where(np.isin(pred_movies, movie_ids))
         indices = np.argwhere(np.isin(pred_movies, test_liked_user_movies)).flatten()
         min_index = indices.min() if indices.size else float("inf")
 

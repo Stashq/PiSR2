@@ -38,7 +38,6 @@ def test_mean_ngdc(test_discretized_ratings: pd.DataFrame, model: Recommender):
     assert ranks  # check if ranks is not empty list
     assert all(isinstance(rank, float) for rank in ranks)
 
-    pass
 
 
 def test_coverage(test_discretized_ratings: pd.DataFrame, model: Recommender):
