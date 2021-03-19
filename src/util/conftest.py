@@ -39,8 +39,8 @@ class DummyRecommender(Recommender):
         return self.RECOMMENDATIONS[user_id][movie_id]
 
     def predict_scores(self, user_id: int) -> Tuple[np.ndarray, np.ndarray]:
-        movies = list(self.RECOMMENDATIONS[user_id].keys())
-        scores = list(self.RECOMMENDATIONS[user_id].values())
+        movies = np.array(list(self.RECOMMENDATIONS[user_id].keys()))
+        scores = np.array(list(self.RECOMMENDATIONS[user_id].values()))
         return movies, scores
 
 
