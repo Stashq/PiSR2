@@ -23,8 +23,9 @@ def mean_reciprocal_rank(
         test_liked_user_ratings = user_ratings[user_ratings["liked"]]
         test_liked_user_movies = test_liked_user_ratings["movieId"].values
 
-        indices = [pred_movies.index(movie_id) for movie_id in test_liked_user_movies]
-        min_index = min(indices) if indices else float('inf')
+        #movie_ids = np.where(np.isin(pred_movies, movie_ids))
+        indices = np.where(np.isin(pred_movies, test_liked_user_movies))
+        min_index = indices.min() if indices.any() else float('inf')
 
         rank = 1 / (min_index + 1)
         ranks.append(rank)
@@ -49,20 +50,16 @@ def mean_ndcg(
     iterator = tqdm(test_discretized_ratings, desc="Testing predictions")
 
     for user_id, user_ratings in iterator:
-        pred_movies_score = model.predict_scores(user_id)
+        pred_movies, pred_scores = model.predict_scores(user_id)
 
-        pred_movies = pred_movies_score[0]
-        pred_score = pred_movies_score[1]
+        user_liked = user_ratings['liked'].values
+        movie_ids = user_ratings['movieId'].values
 
-        y_true = np.asarray([user_ratings['liked'].values])
-        y_idx = user_ratings['movieId'].values
+        movie_ids = np.where(np.isin(pred_movies,movie_ids))
+        pred_score = pred_scores[movie_ids]
 
-        indices = [pred_movies.index(movie_id) for movie_id in y_idx]
-
-        pred_movies = np.take(pred_movies, indices)
-        pred_score = np.asarray([np.take(pred_score, indices)])
         if pred_score.size > 1:  # If there is no enough data -then ignore score counting for that user
-            ndcg = ndcg_score(y_true, pred_score)
+            ndcg = ndcg_score(user_liked.reshape(1,-1), [pred_score])
             ranks.append(ndcg)
 
     return np.mean(ranks), ranks
