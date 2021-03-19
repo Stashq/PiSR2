@@ -64,7 +64,7 @@ def mean_ndcg(
     return np.mean(ranks), ranks
 
 
-def covrage(
+def coverage(
     test_discretized_ratings: pd.DataFrame,
     model: Recommender,
 ) -> float:
@@ -80,5 +80,5 @@ def covrage(
 
     predicted_flattened = [p for sublist in predicted for p in sublist]
     unique_predictions = len(set(predicted_flattened))
-    prediction_coverage = round(unique_predictions / (len(all_movies) * 1.0) * 100, 2)
+    prediction_coverage = round(unique_predictions / (len(all_movies) * 1.0), 2)
     return prediction_coverage

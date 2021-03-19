@@ -2,7 +2,7 @@ import pandas as pd
 
 from src.models.recommender import Recommender
 from src.util import metrics
-from src.util.metrics import covrage
+from src.util.metrics import coverage
 
 
 def test_mean_reciprocal_rank(
@@ -31,7 +31,7 @@ def test_mean_average_precision(
     assert ranks == [0.5, 1.0, 0.0]  # ! TODO: fix later
 
 
-def test_mean_ngdc(test_discretized_ratings: pd.DataFrame, model: Recommender):
+def test_mean_ndcg(test_discretized_ratings: pd.DataFrame, model: Recommender):
     mean, ranks = metrics.mean_ndcg(test_discretized_ratings, model)
     assert isinstance(mean, float)
     assert isinstance(ranks, list)
@@ -41,5 +41,5 @@ def test_mean_ngdc(test_discretized_ratings: pd.DataFrame, model: Recommender):
 
 
 def test_coverage(test_discretized_ratings: pd.DataFrame, model: Recommender):
-    cov = covrage(test_discretized_ratings, model)
+    cov = coverage(test_discretized_ratings, model)
     assert isinstance(cov, float)
