@@ -24,8 +24,8 @@ def mean_reciprocal_rank(
         test_liked_user_movies = test_liked_user_ratings["movieId"].values
 
         #movie_ids = np.where(np.isin(pred_movies, movie_ids))
-        indices = np.where(np.isin(pred_movies, test_liked_user_movies))
-        min_index = indices.min() if indices.any() else float('inf')
+        indices = np.argwhere(np.isin(pred_movies, test_liked_user_movies)).flatten()
+        min_index = indices.min() if indices.size else float('inf')
 
         rank = 1 / (min_index + 1)
         ranks.append(rank)
