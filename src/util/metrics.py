@@ -63,3 +63,19 @@ def mean_ndcg(
             ranks.append(ndcg)
 
     return np.mean(ranks), ranks
+
+def covrage(test_discretized_ratings: pd.DataFrame, model: Recommender, ) -> float:
+
+    predicted = []
+    all_movies = pd.unique(test_discretized_ratings["movieId"])
+
+    test_discretized_ratings = test_discretized_ratings.groupby("userId")
+    iterator = tqdm(test_discretized_ratings, desc="Testing predictions")
+    for user_id, user_ratings in iterator:
+        pred_movies = model.predict(user_id)
+        predicted.append(pred_movies)
+
+    predicted_flattened = [p for sublist in predicted for p in sublist]
+    unique_predictions = len(set(predicted_flattened))
+    prediction_coverage = round(unique_predictions / (len(all_movies) * 1.0) * 100, 2)
+    return prediction_coverage

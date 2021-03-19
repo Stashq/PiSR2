@@ -2,6 +2,7 @@ import pandas as pd
 
 from src.models.recommender import Recommender
 from src.util import metrics
+from src.util.metrics import covrage
 
 
 def test_mean_reciprocal_rank(
@@ -40,5 +41,15 @@ def test_mean_ngdc(
     assert isinstance(ranks, list)
     assert ranks  # check if ranks is not empty list
     assert all(isinstance(rank, float) for rank in ranks)
-    
+
     pass
+
+
+def test_coverage(
+        test_discretized_ratings: pd.DataFrame,
+        model: Recommender
+):
+    cov = covrage(test_discretized_ratings, model)
+    assert isinstance(cov, float)
+
+
