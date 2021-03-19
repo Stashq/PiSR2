@@ -8,27 +8,13 @@ from src.models.recommender import Recommender
 
 
 class DummyRecommender(Recommender):
-
     def __init__(self):
         super(DummyRecommender, self).__init__()
 
         self.RECOMMENDATIONS = {
-            1: {
-                2: 5.0,
-                32: 4.5,
-                4121: 4.2,
-                5422: 4.1,
-                12: 3.5,
-                42: 2.5
-            },
-            2: {
-                42: 4.7,
-                5534: 4.2,
-                11: 3.0
-            },
-            3: {
-                31: 2.75
-            }
+            1: {2: 5.0, 32: 4.5, 4121: 4.2, 5422: 4.1, 12: 3.5, 42: 2.5},
+            2: {42: 4.7, 5534: 4.2, 11: 3.0},
+            3: {31: 2.75},
         }
 
     def predict(self, user_id: int) -> List[int]:
@@ -39,8 +25,8 @@ class DummyRecommender(Recommender):
         return self.RECOMMENDATIONS[user_id][movie_id]
 
     def predict_scores(self, user_id: int) -> Tuple[np.ndarray, np.ndarray]:
-        movies = list(self.RECOMMENDATIONS[user_id].keys())
-        scores = list(self.RECOMMENDATIONS[user_id].values())
+        movies = np.array(list(self.RECOMMENDATIONS[user_id].keys()))
+        scores = np.array(list(self.RECOMMENDATIONS[user_id].values()))
         return movies, scores
 
 
@@ -61,8 +47,8 @@ def test_ratings() -> pd.DataFrame:
             1260759182,
             1260759185,
             1260759205,
-            835355681
-        ]
+            835355681,
+        ],
     }
 
     return pd.DataFrame(ratings)
