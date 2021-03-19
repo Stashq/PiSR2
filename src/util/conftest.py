@@ -8,27 +8,13 @@ from src.models.recommender import Recommender
 
 
 class DummyRecommender(Recommender):
-
     def __init__(self):
         super(DummyRecommender, self).__init__()
 
         self.RECOMMENDATIONS = {
-            1: {
-                2: 5.0,
-                32: 4.5,
-                4121: 4.2,
-                5422: 4.1,
-                12: 3.5,
-                42: 2.5
-            },
-            2: {
-                42: 4.7,
-                5534: 4.2,
-                11: 3.0
-            },
-            3: {
-                31: 2.75
-            }
+            1: {2: 5.0, 32: 4.5, 4121: 4.2, 5422: 4.1, 12: 3.5, 42: 2.5},
+            2: {42: 4.7, 5534: 4.2, 11: 3.0},
+            3: {31: 2.75},
         }
 
     def predict(self, user_id: int) -> List[int]:
@@ -61,8 +47,8 @@ def test_ratings() -> pd.DataFrame:
             1260759182,
             1260759185,
             1260759205,
-            835355681
-        ]
+            835355681,
+        ],
     }
 
     return pd.DataFrame(ratings)
