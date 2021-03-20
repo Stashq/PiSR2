@@ -1,9 +1,10 @@
-from pytest import fixture
-from src.util.discretizer import RatingDiscretizer
 import pandas as pd
+from pytest import fixture
+
+from src.util.discretizer import RatingDiscretizer
 
 
-@fixture(scope='function')
+@fixture(scope="function")
 def rating_discretizer() -> RatingDiscretizer:
     return RatingDiscretizer(squeeze_movie_indexes=False)
 
@@ -11,7 +12,7 @@ def rating_discretizer() -> RatingDiscretizer:
 def test_rating_discretizer(
     test_ratings: pd.DataFrame,
     test_discretized_ratings: pd.DataFrame,
-    rating_discretizer: RatingDiscretizer
+    rating_discretizer: RatingDiscretizer,
 ):
     discretized_ratings = rating_discretizer.fit_transform(test_ratings)
 
