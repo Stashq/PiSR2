@@ -1,22 +1,26 @@
-from sklearn.base import TransformerMixin, BaseEstimator
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
 
-class CustomScaler(TransformerMixin, BaseEstimator):
-    """Constructs a sklearn based transformer working on pandas dataframes
+
+class RatingDiscretizer(TransformerMixin, BaseEstimator):
+    """
+    Constructs a sklearn based transformer working on pandas dataframes
     transforming user ratings to +1 or -1 if a rating is above or below
     user average. If a user has only a single rating then
     global average rating is used.
+
     Parameters
     ----------
     squeeze_movie_indexes : bool, default=True
         Indicate if movie indexes should be reindexed
         from 0 to len(ratings.movieId.unique()).
+
     Example
     --------
     >>> import pandas as pd
-    >>> from src.util.discretizer import CustomScaler
-    >>> transformer = CustomScaler()
+    >>> from src.util.discretizer import RatingDiscretizer
+    >>> transformer = RatingDiscretizer()
     >>> X = pd.read_csv('ratings_small.csv')
     >>> X_train, X_test = sklearn.model_selection.train_test_split(X)
     >>> transformer.fit(X)
@@ -32,7 +36,8 @@ class CustomScaler(TransformerMixin, BaseEstimator):
         self.squeeze_movie_indexes = squeeze_movie_indexes
 
     def fit(self, X, y=None):
-        """Fit transformer by checking X.
+        """
+        Fit transformer by checking X.
         If ``validate`` is ``True``, ``X`` will be checked.
         Parameters
         ----------
@@ -62,7 +67,8 @@ class CustomScaler(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X):
-        """Transform X using the forward function.
+        """
+        Transform X using the forward function.
         Parameters
         ----------
         X : pandas dataframe containing columns ['userId', 'movieId', 'rating']
@@ -70,28 +76,31 @@ class CustomScaler(TransformerMixin, BaseEstimator):
         -------
         X_out : pandas dataframe containing columns ['userId','rating']
             where rating equals 1 or -1 if user likes the movie or not
-            or NaN if user was not present while fitting the CustomScaler
+            or NaN if user was not present while fitting the RatingDiscretizer
             if more columns were passed to the transform function,
             only 'rating' column is modified and the rest is returned unchanged
         """
-        Xcopy = X.copy()
+        x_copy = X.copy()
         valid_user_ids = set(X["userId"]) & set(self.means.index)
         ratings = X.set_index("userId").rating
-        ratings = np.sign(ratings - self.means[valid_user_ids]).values
-        Xcopy.rating.update(pd.Series(ratings, X.rating.index))
+        # liked = np.sign(ratings - self.means[valid_user_ids]).values
+        liked = ratings - self.means[valid_user_ids]
+        liked = liked > 0
+        # x_copy.rating.update(pd.Series(ratings, X.rating.index))
+        x_copy["liked"] = liked.values
 
         if self.squeeze_movie_indexes:
             bad_movie_ids = set(X["movieId"]) - set(self.new_movie_ids.index)
             assert len(bad_movie_ids) == 0, (
                 "passed movieId not present during training\n"
-                "consider using CustomScaler(squeeze_movie_indexes=False)\n"
+                "consider using RatingDiscretizer(squeeze_movie_indexes=False)\n"
                 "to ignore reindexing or clean up the data to be transform"
             )
-            Xcopy.movieId.update(
+            x_copy.movieId.update(
                 pd.Series(self.new_movie_ids[X.movieId].values, X.movieId.index)
             )
 
-        return Xcopy
+        return x_copy
 
     def inverse_transform(self, X):
         """Transform X using the inverse function.
