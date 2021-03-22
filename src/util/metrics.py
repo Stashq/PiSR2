@@ -19,10 +19,16 @@ def mean_reciprocal_rank(
     for user_id, user_ratings in iterator:
         pred_movies = model.predict(user_id)
 
-        test_liked_user_ratings = user_ratings[user_ratings["liked"]]
-        test_liked_user_movies = test_liked_user_ratings["movieId"].values
+        test_movies = set(user_ratings["movieId"].values)
+        test_liked_movies = set(user_ratings[user_ratings["liked"]]["movieId"].values)
 
-        indices = np.argwhere(np.isin(pred_movies, test_liked_user_movies)).flatten()
+        pred_movies = [
+            pred_movie in test_liked_movies
+            for pred_movie in pred_movies
+            if pred_movie in test_movies
+        ]
+
+        indices = np.nonzero(pred_movies)[0]
         min_index = indices.min() if indices.size else float("inf")
 
         rank = 1 / (min_index + 1)

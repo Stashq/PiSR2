@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -32,9 +31,6 @@ class RatingDiscretizer(TransformerMixin, BaseEstimator):
     ...        ...      ...     ...         ...
     """
 
-    def __init__(self, *, squeeze_movie_indexes=True):
-        self.squeeze_movie_indexes = squeeze_movie_indexes
-
     def fit(self, X, y=None):
         """
         Fit transformer by checking X.
@@ -59,11 +55,6 @@ class RatingDiscretizer(TransformerMixin, BaseEstimator):
             pd.Series(global_mean, self.means[user_stats["count"] == 1].index)
         )
 
-        if self.squeeze_movie_indexes:
-            self.old_movie_ids = X.movieId.unique()
-            self.new_movie_ids = pd.Series(
-                {i: new for new, i in enumerate(self.old_movie_ids)}
-            )
         return self
 
     def transform(self, X):
@@ -89,30 +80,19 @@ class RatingDiscretizer(TransformerMixin, BaseEstimator):
         # x_copy.rating.update(pd.Series(ratings, X.rating.index))
         x_copy["liked"] = liked.values
 
-        if self.squeeze_movie_indexes:
-            bad_movie_ids = set(X["movieId"]) - set(self.new_movie_ids.index)
-            assert len(bad_movie_ids) == 0, (
-                "passed movieId not present during training\n"
-                "consider using RatingDiscretizer(squeeze_movie_indexes=False)\n"
-                "to ignore reindexing or clean up the data to be transform"
-            )
-            x_copy.movieId.update(
-                pd.Series(self.new_movie_ids[X.movieId].values, X.movieId.index)
-            )
-
         return x_copy
 
-    def inverse_transform(self, X):
-        """Transform X using the inverse function.
-        Parameters
-        ----------
-        X : pandas dataframe with columns ['userId', 'movieId', 'rating']
-        Returns
-        -------
-        X_out : pandas dataframe with columns ['userId', 'movieId', 'rating']
-            with mapped back column 'movieId'.
-            Notice that there is no reverse mapping of ratings
-            as this information is permanently lost by the transformation.
-        """
-        X.movieId.update(pd.Series(self.old_movie_ids[X.movieId], X.movieId.index))
-        return X
+    # def inverse_transform(self, X):
+    #     """Transform X using the inverse function.
+    #     Parameters
+    #     ----------
+    #     X : pandas dataframe with columns ['userId', 'movieId', 'rating']
+    #     Returns
+    #     -------
+    #     X_out : pandas dataframe with columns ['userId', 'movieId', 'rating']
+    #         with mapped back column 'movieId'.
+    #         Notice that there is no reverse mapping of ratings
+    #         as this information is permanently lost by the transformation.
+    #     """
+    #     X.movieId.update(pd.Series(self.old_movie_ids[X.movieId], X.movieId.index))
+    #     return X
