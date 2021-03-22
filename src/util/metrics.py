@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import ndcg_score
 from tqdm.auto import tqdm
-from sklearn.metrics import ndcg_score
 
 from src.models.recommender import Recommender
 

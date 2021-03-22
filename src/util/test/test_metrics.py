@@ -39,7 +39,6 @@ def test_mean_ndcg(test_discretized_ratings: pd.DataFrame, model: Recommender):
     assert all(isinstance(rank, float) for rank in ranks)
 
 
-
 def test_coverage(test_discretized_ratings: pd.DataFrame, model: Recommender):
     cov = coverage(test_discretized_ratings, model)
     assert isinstance(cov, float)
