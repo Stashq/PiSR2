@@ -6,7 +6,7 @@ from src.util.discretizer import RatingDiscretizer
 
 @fixture(scope="function")
 def rating_discretizer() -> RatingDiscretizer:
-    return RatingDiscretizer(squeeze_movie_indexes=False)
+    return RatingDiscretizer()
 
 
 def test_rating_discretizer(

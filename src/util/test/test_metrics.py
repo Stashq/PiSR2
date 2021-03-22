@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from src.models.recommender import Recommender
 from src.util import metrics
@@ -20,12 +20,10 @@ def test_mean_reciprocal_rank(
 
 
 def test_mean_average_precision(
-    test_discretized_ratings: pd.DataFrame,
-    model: Recommender,
-    N: int
+    test_discretized_ratings: pd.DataFrame, model: Recommender, N: int
 ):
     mean, ranks = metrics.mean_average_precision(test_discretized_ratings, model, N)
-    trues = [(1/2 + 2/5) / 2, 1, 0]
+    trues = [(1 / 2 + 2 / 5) / 2, 1, 0]
     assert isinstance(mean, float)
     assert mean == np.mean(trues)
 
