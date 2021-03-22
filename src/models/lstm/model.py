@@ -15,7 +15,6 @@ if torch.cuda.is_available():
 
 
 class LSTMRatingsModel(nn.Module, Recommender):
-
     def __init__(
         self,
         interactions: np.ndarray,
@@ -39,16 +38,10 @@ class LSTMRatingsModel(nn.Module, Recommender):
         self.setup()
 
     def setup(self):
-        self.user_embedding = nn.Embedding(
-            self.USER_DIM,
-            self.N_FACTORS,
-            sparse=False
-        )
+        self.user_embedding = nn.Embedding(self.USER_DIM, self.N_FACTORS, sparse=False)
 
         self.movie_embedding = nn.Embedding(
-            self.MOVIE_DIM,
-            self.N_FACTORS,
-            sparse=False
+            self.MOVIE_DIM, self.N_FACTORS, sparse=False
         )
 
         # self.user_bias = nn.Embedding(self.USER_DIM, 1, sparse=True)
@@ -64,9 +57,7 @@ class LSTMRatingsModel(nn.Module, Recommender):
         self.sigmoid = nn.Sigmoid()
 
     def forward(
-        self,
-        users: torch.LongTensor,
-        movies: torch.LongTensor
+        self, users: torch.LongTensor, movies: torch.LongTensor
     ) -> torch.FloatTensor:
 
         user_embedding = self.user_embedding(users)
@@ -166,18 +157,12 @@ class LSTMRatingsModel(nn.Module, Recommender):
         ratings = list(ratings.cpu().numpy())
         movies = list(movies.cpu().numpy())
 
-        ranking = pd.DataFrame(
-            zip(movies, ratings),
-            columns=['movie', 'rating']
-        )
+        ranking = pd.DataFrame(zip(movies, ratings), columns=["movie", "rating"])
 
-        ranking = ranking.sort_values(
-            by='rating',
-            ascending=False
-        )
+        ranking = ranking.sort_values(by="rating", ascending=False)
 
-        movies = ranking['movie'].values
-        ratings = ranking['rating'].values
+        movies = ranking["movie"].values
+        ratings = ranking["rating"].values
 
         movies = self.movie_encoder.inverse_transform(movies)
         ratings *= self.MAX_RATING
