@@ -69,7 +69,8 @@ class KMeansClustering(Recommender):
         Returns
         -------
         float
-            Averaged rating of movie.
+            Averaged rating of movie. 
+            If no user has rated movie, returns 0.
         """
         movie_ratings = [rate for rate in self.interactions[users_ids, movie_id] if rate > 0.0]
         movie_mean = np.mean(movie_ratings)

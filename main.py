@@ -60,7 +60,6 @@ else:
 
 print(model.predict_score(ratings.iloc[0, 0], ratings.iloc[0, 1]))
 print(ratings.iloc[0])
-x=1
 
 
 # # testowanie hierarchicznej klasteryzacji
