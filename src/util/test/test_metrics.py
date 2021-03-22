@@ -11,11 +11,11 @@ def test_mean_reciprocal_rank(
     mean, ranks = metrics.mean_reciprocal_rank(test_discretized_ratings, model)
 
     assert isinstance(mean, float)
-    assert mean == 0.5
+    assert mean == 2 / 3
 
     assert isinstance(ranks, list)
     assert all(isinstance(rank, float) for rank in ranks)
-    assert ranks == [0.5, 1.0, 0.0]
+    assert ranks == [1.0, 1.0, 0.0]
 
 
 def test_mean_average_precision(
