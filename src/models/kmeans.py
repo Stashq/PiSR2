@@ -1,12 +1,13 @@
-import numpy as np
-from typing import List, Union, Tuple
 import pickle
+from typing import List, Tuple, Union
 
+import numpy as np
 from scipy.cluster.hierarchy import dendrogram
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import LabelEncoder
 
 from src.models.recommender import Recommender
+
 
 class KMeansClustering(Recommender):
     def __init__(
@@ -23,10 +24,7 @@ class KMeansClustering(Recommender):
         self.n_clusters = n_clusters
         self.model = KMeans(n_clusters=n_clusters)
 
-    def fit(
-        self,
-        interactions: np.ndarray
-    ):
+    def fit(self, interactions: np.ndarray):
         """Learns model on given interactions.
         Saves informations such as:
         - which user belongs to which cluster
@@ -47,14 +45,14 @@ class KMeansClustering(Recommender):
 
         self.club_taste = np.zeros(shape=(len(set(self.labels)), n_movies))
         for cluster in set(self.labels):
-            users_ids = cluster == self.labels # filtering users in cluster
+            users_ids = cluster == self.labels  # filtering users in cluster
             for i in range(n_movies):
-                self.club_taste[cluster, i] = self._cluster_avg_movie_rating(users_ids, i)
-    
+                self.club_taste[cluster, i] = self._cluster_avg_movie_rating(
+                    users_ids, i
+                )
+
     def _cluster_avg_movie_rating(
-        self,
-        users_ids: Union[List[int], List[bool]],
-        movie_id: int
+        self, users_ids: Union[List[int], List[bool]], movie_id: int
     ) -> float:
         """Calculate rating of movie for cluster.
         It is done by averaging only ratings of users belonging to one cluster.
@@ -69,19 +67,18 @@ class KMeansClustering(Recommender):
         Returns
         -------
         float
-            Averaged rating of movie. 
+            Averaged rating of movie.
             If no user has rated movie, returns 0.
         """
-        movie_ratings = [rate for rate in self.interactions[users_ids, movie_id] if rate > 0.0]
+        movie_ratings = [
+            rate for rate in self.interactions[users_ids, movie_id] if rate > 0.0
+        ]
         movie_mean = np.mean(movie_ratings)
         if np.isnan(movie_mean):
             movie_mean = 0.0
         return movie_mean
 
-    def predict(
-        self,
-        user_id: int
-    ) -> List[int]:
+    def predict(self, user_id: int) -> List[int]:
         user_id = self.user_encoder.transform([user_id])[0]
         cluster = self.labels[user_id]
         ratings = self.club_taste[cluster]

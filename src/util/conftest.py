@@ -61,6 +61,7 @@ def test_discretized_ratings(test_ratings: pd.DataFrame) -> pd.DataFrame:
 
     return test_discretized_ratings
 
+
 @fixture(scope="session")
 def N() -> int:
     return 10
