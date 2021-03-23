@@ -28,7 +28,7 @@ MOVIES_PATH = Path("../data/movies_metadata.csv")
 RATINGS_PATH = Path("../data/ratings_small.csv")
 
 
-def get_dataset_eval(Embeddings=False) -> pd.DataFrame:
+def get_dataset_eval(embeddings=False) -> pd.DataFrame:
     movies = pd.read_csv(MOVIES_PATH)
     ratings = pd.read_csv(RATINGS_PATH)
     to_drop = ["1997-08-20", "2012-09-29", "2014-01-01"]
@@ -72,7 +72,7 @@ def get_dataset_eval(Embeddings=False) -> pd.DataFrame:
     dataset.userId = dataset.userId.astype(int)
     dataset.movieId = dataset.movieId.astype(int)
 
-    if Embeddings:
+    if embeddings:
         movies_emb = pickle.load(open(EMBEDDING_PATH, "rb"))
         dataset = dataset.merge(
             movies_emb[["id", "vector"]], left_on="movieId", right_on="id"

@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 
-from src.models.contentBased.data import get_dataset_eval
+from src.models.content_based.data import get_dataset_eval
 from src.models.recommender import Recommender
 
 DEVICE = torch.device("cpu")
@@ -19,8 +19,10 @@ if torch.cuda.is_available():
 
 class ContentBaseRecommenderSystem(nn.Module, Recommender):
     def __init__(self, input_size, hidden_feature_size):
-        super().__init__()
-        self.movies = get_dataset_eval(Embeddings=True)
+
+        nn.Module.__init__(self)
+        Recommender.__init__(self)
+        self.movies = get_dataset_eval(embeddings=True)
 
         self.fc1 = nn.Linear(input_size, hidden_feature_size)
         self.fc2 = nn.Linear(hidden_feature_size, hidden_feature_size)
@@ -48,7 +50,7 @@ class ContentBaseRecommenderSystem(nn.Module, Recommender):
         x = self.act_fn(self.fc3(x))
         out = torch.sigmoid(self.out_layer(x))
 
-        return out * 5
+        return out * self.MAX_RATING
 
     def predict(self, user_id: int) -> List[int]:
         """

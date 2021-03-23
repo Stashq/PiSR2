@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 from tqdm.auto import tqdm
 
-from src.models.contentBased.data import get_dataset
+from src.models.content_based.data import get_dataset
 
 DEVICE = torch.device("cpu")
 if torch.cuda.is_available():
