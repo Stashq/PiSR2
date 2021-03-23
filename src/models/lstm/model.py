@@ -27,8 +27,8 @@ class LSTMRatingsModel(nn.Module, Recommender):
         nn.Module.__init__(self)
         Recommender.__init__(self)
 
-        self.interactions = interactions
-        self.USER_DIM, self.MOVIE_DIM = self.interactions.shape
+        # self.interactions = interactions
+        self.USER_DIM, self.MOVIE_DIM = interactions.shape
         self.N_FACTORS = n_factors
 
         self.user_encoder = user_encoder
@@ -47,10 +47,21 @@ class LSTMRatingsModel(nn.Module, Recommender):
         # self.user_bias = nn.Embedding(self.USER_DIM, 1, sparse=True)
         # self.movie_bias = nn.Embedding(self.MOVIE_DIM, 1, sparse=True)
 
-        self.linear1 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS * 2)
-        self.dropout1 = nn.Dropout(p=0.2)
+        self.lstm1 = nn.LSTM(
+            input_size=self.N_FACTORS * 2,
+            hidden_size=self.N_FACTORS,
+            # num_layers=,
+            # bias=,
+            # batch_first=,
+            # dropout=,
+            # bidirectional=,
+            # proj_size=,
+        )
 
-        self.linear2 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS)
+        self.linear1 = nn.Linear(self.N_FACTORS, self.N_FACTORS)
+        self.dropout1 = nn.Dropout(p=0.1)
+
+        self.linear2 = nn.Linear(self.N_FACTORS, self.N_FACTORS)
         self.dropout2 = nn.Dropout(p=0.2)
 
         self.linear3 = nn.Linear(self.N_FACTORS, 1)
@@ -63,7 +74,11 @@ class LSTMRatingsModel(nn.Module, Recommender):
         user_embedding = self.user_embedding(users)
         movie_embedding = self.movie_embedding(movies)
 
-        x = torch.cat([user_embedding, movie_embedding], 1)
+        embeddings = torch.cat([user_embedding, movie_embedding], 1)
+        embeddings = embeddings.view(len(users), 1, -1)
+
+        x, _ = self.lstm1(embeddings)
+        x = x.view(len(users), -1)
 
         x = self.linear1(x)
         x = self.dropout1(x)

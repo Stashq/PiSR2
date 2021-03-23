@@ -6,10 +6,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.nn.modules.loss import _Loss
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
-
-from src.models.lstm.data import get_dataset
+from src.models.lstm.model import LSTMRatingsModel
 
 DEVICE = torch.device("cpu")
 if torch.cuda.is_available():
@@ -43,9 +42,9 @@ class Trainer:
 
     def fit(
         self,
-        model: nn.Module,
-        train_interactions: np.ndarray,
-        test_interactions: np.ndarray,
+        model: LSTMRatingsModel,
+        train_dataset: TensorDataset,
+        test_dataset: TensorDataset,
     ):
 
         self.train_loss_history = []
@@ -55,11 +54,13 @@ class Trainer:
             model.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY
         )
 
-        train_dataset = get_dataset(train_interactions)
-        test_dataset = get_dataset(test_interactions)
         test_users, test_movies, test_ratings = test_dataset.tensors
 
-        data_loader = DataLoader(train_dataset, batch_size=self.BATCH_SIZE)
+        data_loader = DataLoader(
+            train_dataset,
+            batch_size=self.BATCH_SIZE,
+            shuffle=False,
+        )
 
         model.to(DEVICE)
 
@@ -80,13 +81,18 @@ class Trainer:
 
                 train_loss += loss.item()
 
-            test_prediction = model(test_users, test_movies)
-            test_loss = self.loss(test_prediction, test_ratings).item()
-
-            for regularizer in self.regularizers:
-                test_loss += regularizer(test_prediction).item()
-
             train_loss /= len(data_loader)
+
+            model.eval()
+            with torch.no_grad():
+
+                test_prediction = model(test_users, test_movies)
+                test_loss = self.loss(test_prediction, test_ratings).item()
+
+                for regularizer in self.regularizers:
+                    test_loss += regularizer(test_prediction).item()
+
+            model.train()
 
             self.train_loss_history.append(train_loss)
             self.test_loss_history.append(test_loss)
@@ -94,7 +100,7 @@ class Trainer:
             if self.VERBOSE:
                 msg = f"Train loss: {train_loss:.3f}, "
                 msg += f"Test loss: {test_loss:.3f}"
-                tqdm.write(msg)
+                print(msg)
 
     def get_loss_history(self) -> pd.DataFrame:
         loss_history = {

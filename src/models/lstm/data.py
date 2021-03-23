@@ -1,4 +1,4 @@
-import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import TensorDataset
 
@@ -7,15 +7,11 @@ if torch.cuda.is_available():
     DEVICE = torch.device("cuda")
 
 
-def get_dataset(interactions: np.ndarray) -> TensorDataset:
-    users, movies = interactions.nonzero()
-    ratings = interactions[users, movies]
+def get_dataset(ratings: pd.DataFrame) -> TensorDataset:
 
-    permutation = torch.randperm(len(users))
-
-    users = users[permutation]
-    movies = movies[permutation]
-    ratings = ratings[permutation]
+    users = ratings["userId"].values
+    movies = ratings["movieId"].values
+    ratings = ratings["rating"].values
 
     users = torch.LongTensor(users).to(DEVICE)
     movies = torch.LongTensor(movies).to(DEVICE)
