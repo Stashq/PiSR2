@@ -154,3 +154,22 @@ def coverage(
     unique_predictions = len(set(predicted_flattened))
     prediction_coverage = round(unique_predictions / (len(all_movies) * 1.0), 2)
     return prediction_coverage
+
+def RMSE(
+    test_ratings: pd.DataFrame,
+    model: Recommender,
+) -> float:
+
+    predicted = []
+
+    iterator = tqdm(test_ratings.iterrows(), 
+                    total=len(test_ratings),
+                    desc="Testing predictions")
+    for index, row in iterator:
+        pred_movies = model.predict_score(row.userId, row.movieId)
+        predicted.append(pred_movies)
+
+    E = (np.array(predicted) - test_ratings.rating.values)
+    SE = E ** 2
+    RMSE = SE.mean() ** 0.5
+    return RMSE
