@@ -170,7 +170,7 @@ def RMSE(
         pred_movies = model.predict_score(row.userId, row.movieId)
         predicted.append(pred_movies)
 
-    E = np.array(predicted) - test_ratings.rating.values
-    SE = E ** 2
-    RMSE = SE.mean() ** 0.5
-    return RMSE
+    e = np.array(predicted) - test_ratings.rating.values
+    se = E ** 2
+    rmse = SE.mean() ** 0.5
+    return rmse
