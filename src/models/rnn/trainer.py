@@ -73,7 +73,7 @@ class Trainer:
                     self.regularizers,
                     users_batch,
                     movies_batch,
-                    ratings_batch
+                    ratings_batch,
                 )
 
                 loss.backward()
@@ -97,7 +97,7 @@ class Trainer:
                         self.regularizers,
                         users_batch,
                         movies_batch,
-                        ratings_batch
+                        ratings_batch,
                     ).item()
 
                 test_loss /= len(test_data_loader)
@@ -118,7 +118,7 @@ class Trainer:
         regularizers: List[_Loss],
         users_batch: torch.Tensor,
         movies_batch: torch.Tensor,
-        ratings_batch: torch.Tensor
+        ratings_batch: torch.Tensor,
     ):
         prediction = model(users_batch, movies_batch)
         loss_ = loss(prediction, ratings_batch)

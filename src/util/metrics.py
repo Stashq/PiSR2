@@ -39,7 +39,7 @@ def mean_reciprocal_rank(
 
 
 def mean_average_precision(
-    test_discretized_ratings: pd.DataFrame, model: Recommender, N: int
+    test_discretized_ratings: pd.DataFrame, model: Recommender, N: int = 10
 ) -> Tuple[float, List[float]]:
     """
     Calculate mean average precision.
@@ -84,7 +84,11 @@ def mean_average_precision(
             average_precision = (index + 1) / (rank + 1)
             average_precisions.append(average_precision)
 
-        average_precision = np.mean(average_precisions)
+        average_precision = 0
+
+        if average_precisions:
+            average_precision = np.mean(average_precisions)
+
         ranks.append(average_precision)
 
     return np.mean(ranks), ranks
