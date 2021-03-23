@@ -1,8 +1,11 @@
 import pandas as pd
+from pathlib import Path
 from sklearn import preprocessing
 from torch.utils.data import TensorDataset
-
+from src.util.discretizer import RatingDiscretizer
 from src.util.data import get_train_test_ratings
+import pickle
+import torch
 
 column_list = [
     "id",
@@ -17,16 +20,15 @@ column_list = [
     "spoken_languages",
     "genres",
 ]
-import pickle
 
-import torch
+EMBEDDING_PATH = Path("../data/emb.pkl")
+MOVIES_PATH = Path("../data/movies_metadata.csv")
+RATINGS_PATH = Path("../data/ratings_small.csv")
 
-EMBEDDING_PATH = "../emb.pkl"
 
-
-def get_dataset_eval(self, Embeddings=False) -> pd.DataFrame:
-    movies = self.movies
-    ratings = self.ratings
+def get_dataset_eval(Embeddings=False) -> pd.DataFrame:
+    movies = pd.read_csv(MOVIES_PATH)
+    ratings = pd.read_csv(RATINGS_PATH)
     to_drop = ["1997-08-20", "2012-09-29", "2014-01-01"]
     for drop_error in to_drop:
         movies = movies[movies.id != drop_error]
@@ -77,19 +79,21 @@ def get_dataset_eval(self, Embeddings=False) -> pd.DataFrame:
     else:
         dataset = dataset.drop(["id"], axis=1)
     dataset = dataset.drop(["timestamp"], axis=1)
+
     return dataset
 
 
 def get_dataset():
     dataset = get_dataset_eval(True)
     train_ratings, test_ratings = get_train_test_ratings(dataset)
+
     target_train = torch.Tensor(train_ratings.rating.values)
     target_test = torch.Tensor(test_ratings.rating.values)
     train_ratings = train_ratings.drop(["movieId", "rating"], axis=1)
     test_ratings = test_ratings.drop(["movieId", "rating"], axis=1)
 
-    train_ratings_t = torch.Tensor(train_ratings.drop(["vector"], axis=1).values)
-    test_ratings_t = torch.Tensor(test_ratings.drop(["vector"], axis=1).values)
+    train_ratings_t = torch.Tensor(train_ratings.drop(["vector"], axis=1).values.astype(float))
+    test_ratings_t = torch.Tensor(test_ratings.drop(["vector"], axis=1).values.astype(float))
 
     vec_train = torch.Tensor(list(train_ratings.vector.values))
     vec_test = torch.Tensor(list(test_ratings.vector.values))

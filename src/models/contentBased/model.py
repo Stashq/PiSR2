@@ -12,15 +12,22 @@ from torch.utils.data import DataLoader, TensorDataset
 from src.models.contentBased.data import get_dataset_eval
 from src.models.recommender import Recommender
 
+DEVICE = torch.device("cpu")
+if torch.cuda.is_available():
+    DEVICE = torch.device("cuda")
 
 class ContentBaseRecommenderSystem(nn.Module, Recommender):
     def __init__(self, input_size, hidden_feature_size):
         super().__init__()
         self.movies = get_dataset_eval(Embeddings=True)
-        self.fc1 = nn.Linear(input_size, hidden_feature_size)  # fully connected
 
+        self.fc1 = nn.Linear(input_size, hidden_feature_size)
         self.fc2 = nn.Linear(hidden_feature_size, hidden_feature_size)
         self.fc3 = nn.Linear(hidden_feature_size, hidden_feature_size)
+
+        self.dropout1 = nn.Dropout(p=0.2)
+        self.dropout2 = nn.Dropout(p=0.2)
+
         self.out_layer = nn.Linear(hidden_feature_size, 1)
         self.act_fn = F.relu
         self.setup()
@@ -30,13 +37,15 @@ class ContentBaseRecommenderSystem(nn.Module, Recommender):
 
     def forward(self, x):
         x = self.fc1(x)
+        x = self.dropout1(x)
         x = self.act_fn(x)
 
         x = self.fc2(x)
+        x = self.dropout2(x)
         x = self.act_fn(x)
 
         x = self.act_fn(self.fc3(x))
-        out = F.sigmoid(self.out_layer(x))
+        out = torch.sigmoid(self.out_layer(x))
 
         return out * 5
 
