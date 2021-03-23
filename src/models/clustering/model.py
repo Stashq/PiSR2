@@ -100,6 +100,8 @@ class KMeansClustering(Recommender):
 
         unrated = np.where(self.interactions[user_id, :] == 0)[0]
         recom_ids = np.argsort(ratings[unrated])[::-1]
-        recom_rates = sorted(ratings[unrated])[::-1]
+        recom_rates = np.array(sorted(ratings[unrated]))[::-1]
+
+        recom_ids = self.movie_encoder.inverse_transform(recom_ids)
 
         return recom_ids, recom_rates
