@@ -64,4 +64,4 @@ def test_coverage(test_discretized_ratings: pd.DataFrame, model: Recommender):
 def test_rmse(test_ratings: pd.DataFrame, model: Recommender):
     rmse = metrics.rmse(test_ratings, model)
     assert isinstance(rmse, float)
-    assert rmse == 0.3878358759406698
+    assert rmse == 0.9405545476700737
