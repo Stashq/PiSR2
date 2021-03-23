@@ -1,18 +1,13 @@
 from typing import List
 
-import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.nn.modules.loss import _Loss
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
-from src.models.lstm.model import LSTMRatingsModel
 
-DEVICE = torch.device("cpu")
-if torch.cuda.is_available():
-    DEVICE = torch.device("cuda")
+from src.models.rnn.model import RNNRatings
 
 
 class Trainer:
@@ -42,7 +37,7 @@ class Trainer:
 
     def fit(
         self,
-        model: LSTMRatingsModel,
+        model: RNNRatings,
         train_dataset: TensorDataset,
         test_dataset: TensorDataset,
     ):
@@ -56,51 +51,82 @@ class Trainer:
 
         test_users, test_movies, test_ratings = test_dataset.tensors
 
-        data_loader = DataLoader(
+        train_data_loader = DataLoader(
             train_dataset,
             batch_size=self.BATCH_SIZE,
             shuffle=False,
         )
 
-        model.to(DEVICE)
+        test_data_loader = DataLoader(
+            test_dataset, batch_size=self.BATCH_SIZE, shuffle=False
+        )
 
         for epoch in tqdm(range(0, self.EPOCHS), desc="Training"):
             train_loss = 0
 
-            for users_batch, movies_batch, ratings_batch in data_loader:
+            for users_batch, movies_batch, ratings_batch in train_data_loader:
                 optimizer.zero_grad()
 
-                prediction = model(users_batch, movies_batch)
-                loss = self.loss(prediction, ratings_batch)
-
-                for regularizer in self.regularizers:
-                    loss += regularizer(prediction)
+                loss = self.step_loss(
+                    model,
+                    self.loss,
+                    self.regularizers,
+                    users_batch,
+                    movies_batch,
+                    ratings_batch
+                )
 
                 loss.backward()
                 optimizer.step()
 
                 train_loss += loss.item()
 
-            train_loss /= len(data_loader)
+            train_loss /= len(train_data_loader)
+            self.train_loss_history.append(train_loss)
+
+            test_loss = 0
 
             model.eval()
             with torch.no_grad():
 
-                test_prediction = model(test_users, test_movies)
-                test_loss = self.loss(test_prediction, test_ratings).item()
+                for users_batch, movies_batch, ratings_batch in test_data_loader:
 
-                for regularizer in self.regularizers:
-                    test_loss += regularizer(test_prediction).item()
+                    test_loss += self.step_loss(
+                        model,
+                        self.loss,
+                        self.regularizers,
+                        users_batch,
+                        movies_batch,
+                        ratings_batch
+                    ).item()
+
+                test_loss /= len(test_data_loader)
 
             model.train()
 
-            self.train_loss_history.append(train_loss)
             self.test_loss_history.append(test_loss)
 
             if self.VERBOSE:
                 msg = f"Train loss: {train_loss:.3f}, "
                 msg += f"Test loss: {test_loss:.3f}"
                 print(msg)
+
+    def step_loss(
+        self,
+        model: RNNRatings,
+        loss: _Loss,
+        regularizers: List[_Loss],
+        users_batch: torch.Tensor,
+        movies_batch: torch.Tensor,
+        ratings_batch: torch.Tensor
+    ):
+        prediction = model(users_batch, movies_batch)
+        loss_ = loss(prediction, ratings_batch)
+
+        for regularizer in regularizers:
+            loss_ += regularizer(prediction)
+
+        return loss_
 
     def get_loss_history(self) -> pd.DataFrame:
         loss_history = {
