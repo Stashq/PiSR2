@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.preprocessing import LabelEncoder
+from torch.utils.data import DataLoader, TensorDataset
 
 from src.models.recommender import Recommender
 
@@ -14,7 +15,7 @@ if torch.cuda.is_available():
     DEVICE = torch.device("cuda")
 
 
-class LSTMRatingsModel(nn.Module, Recommender):
+class RNNRatings(nn.Module, Recommender):
     def __init__(
         self,
         interactions: np.ndarray,
@@ -28,7 +29,7 @@ class LSTMRatingsModel(nn.Module, Recommender):
         Recommender.__init__(self)
 
         self.interactions = interactions
-        self.USER_DIM, self.MOVIE_DIM = self.interactions.shape
+        self.USER_DIM, self.MOVIE_DIM = interactions.shape
         self.N_FACTORS = n_factors
 
         self.user_encoder = user_encoder
@@ -47,11 +48,21 @@ class LSTMRatingsModel(nn.Module, Recommender):
         # self.user_bias = nn.Embedding(self.USER_DIM, 1, sparse=True)
         # self.movie_bias = nn.Embedding(self.MOVIE_DIM, 1, sparse=True)
 
-        self.linear1 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS * 2)
-        self.dropout1 = nn.Dropout(p=0.2)
+        # self.lstm1 = nn.LSTM(
+        #     input_size=self.N_FACTORS * 2,
+        #     hidden_size=self.N_FACTORS,
+        #     # num_layers=,
+        # )
 
-        self.linear2 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS)
-        self.dropout2 = nn.Dropout(p=0.2)
+        self.gru1 = nn.GRU(
+            input_size=self.N_FACTORS * 2, hidden_size=self.N_FACTORS * 2, num_layers=1
+        )
+
+        self.linear1 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS)
+        self.dropout1 = nn.Dropout(p=0.1)
+
+        self.linear2 = nn.Linear(self.N_FACTORS, self.N_FACTORS)
+        self.dropout2 = nn.Dropout(p=0.1)
 
         self.linear3 = nn.Linear(self.N_FACTORS, 1)
         self.sigmoid = nn.Sigmoid()
@@ -63,7 +74,13 @@ class LSTMRatingsModel(nn.Module, Recommender):
         user_embedding = self.user_embedding(users)
         movie_embedding = self.movie_embedding(movies)
 
-        x = torch.cat([user_embedding, movie_embedding], 1)
+        embeddings = torch.cat([user_embedding, movie_embedding], 1)
+        embeddings = embeddings.view(len(users), 1, -1)
+
+        # x, _ = self.lstm1(embeddings)
+        x, _ = self.gru1(embeddings)
+
+        x = x.view(len(users), -1)
 
         x = self.linear1(x)
         x = self.dropout1(x)
@@ -148,13 +165,25 @@ class LSTMRatingsModel(nn.Module, Recommender):
 
         movies -= set(movies_seen)
         movies = list(movies)
-        movies = torch.LongTensor(movies).to(DEVICE)
 
+        movies = torch.LongTensor(movies).to(DEVICE)
         user = torch.LongTensor([user_id] * len(movies)).to(DEVICE)
 
-        ratings = self.forward(user, movies) * self.MAX_RATING
+        dataset = TensorDataset(user, movies)
+        data_loader = DataLoader(dataset, batch_size=1_000, shuffle=False)
 
-        ratings = list(ratings.cpu().numpy())
+        ratings = []
+
+        for user_batch, movie_batch in data_loader:
+            ratings_batch = self.forward(user_batch, movie_batch)
+
+            if ratings_batch.ndim:
+                ratings_batch = list(ratings_batch.cpu().numpy())
+            else:
+                ratings_batch = [ratings_batch.cpu().item()]
+
+            ratings += ratings_batch
+
         movies = list(movies.cpu().numpy())
 
         ranking = pd.DataFrame(zip(movies, ratings), columns=["movie", "rating"])
