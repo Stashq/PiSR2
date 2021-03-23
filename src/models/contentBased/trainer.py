@@ -26,7 +26,6 @@ class Trainer:
         epochs: int = 50,
         batch_size: int = 1_000,
         verbose: int = 0,
-
     ):
         super(Trainer, self).__init__()
 
@@ -69,7 +68,7 @@ class Trainer:
             for train, target in data_loader_train:
                 optimizer.zero_grad()
                 x = train.to(DEVICE)
-                y = target.to(DEVICE).reshape((-1,1))
+                y = target.to(DEVICE).reshape((-1, 1))
                 prediction = model(x)
                 loss = self.loss(prediction, y)
 
@@ -82,7 +81,7 @@ class Trainer:
                 train_loss += loss.item()
 
             test_prediction = model(test_set)
-            test_loss = self.loss(test_prediction, test_targets.reshape((-1,1))).item()
+            test_loss = self.loss(test_prediction, test_targets.reshape((-1, 1))).item()
 
             for regularizer in self.regularizers:
                 test_loss += regularizer(test_prediction).item()

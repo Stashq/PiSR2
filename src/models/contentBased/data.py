@@ -1,11 +1,13 @@
-import pandas as pd
+import pickle
 from pathlib import Path
+
+import pandas as pd
+import torch
 from sklearn import preprocessing
 from torch.utils.data import TensorDataset
-from src.util.discretizer import RatingDiscretizer
+
 from src.util.data import get_train_test_ratings
-import pickle
-import torch
+from src.util.discretizer import RatingDiscretizer
 
 column_list = [
     "id",
@@ -92,8 +94,12 @@ def get_dataset():
     train_ratings = train_ratings.drop(["movieId", "rating"], axis=1)
     test_ratings = test_ratings.drop(["movieId", "rating"], axis=1)
 
-    train_ratings_t = torch.Tensor(train_ratings.drop(["vector"], axis=1).values.astype(float))
-    test_ratings_t = torch.Tensor(test_ratings.drop(["vector"], axis=1).values.astype(float))
+    train_ratings_t = torch.Tensor(
+        train_ratings.drop(["vector"], axis=1).values.astype(float)
+    )
+    test_ratings_t = torch.Tensor(
+        test_ratings.drop(["vector"], axis=1).values.astype(float)
+    )
 
     vec_train = torch.Tensor(list(train_ratings.vector.values))
     vec_test = torch.Tensor(list(test_ratings.vector.values))

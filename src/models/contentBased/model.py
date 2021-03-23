@@ -16,6 +16,7 @@ DEVICE = torch.device("cpu")
 if torch.cuda.is_available():
     DEVICE = torch.device("cuda")
 
+
 class ContentBaseRecommenderSystem(nn.Module, Recommender):
     def __init__(self, input_size, hidden_feature_size):
         super().__init__()
