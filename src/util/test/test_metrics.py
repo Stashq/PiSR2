@@ -45,3 +45,8 @@ def test_mean_ndcg(test_discretized_ratings: pd.DataFrame, model: Recommender):
 def test_coverage(test_discretized_ratings: pd.DataFrame, model: Recommender):
     cov = coverage(test_discretized_ratings, model)
     assert isinstance(cov, float)
+
+
+def test_rmse(test_ratings: pd.DataFrame, model: Recommender):
+    rmse = metrics.rmse(test_ratings, model)
+    assert isinstance(rmse, float)

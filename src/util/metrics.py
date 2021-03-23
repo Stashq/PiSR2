@@ -156,7 +156,7 @@ def coverage(
     return prediction_coverage
 
 
-def RMSE(
+def rmse(
     test_ratings: pd.DataFrame,
     model: Recommender,
 ) -> float:
@@ -171,6 +171,6 @@ def RMSE(
         predicted.append(pred_movies)
 
     e = np.array(predicted) - test_ratings.rating.values
-    se = E ** 2
-    rmse = SE.mean() ** 0.5
+    se = e ** 2
+    rmse = se.mean() ** 0.5
     return rmse
