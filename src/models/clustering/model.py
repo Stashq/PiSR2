@@ -98,9 +98,9 @@ class KMeansClustering(Recommender):
         cluster = self.labels[user_id]
         ratings = self.club_taste[cluster]
 
-        unrated = np.where(self.interactions[user_id, :] == 0)[0]
-        recom_ids = np.argsort(ratings[unrated])[::-1]
-        recom_rates = np.array(sorted(ratings[unrated]))[::-1]
+        # unrated = np.where(self.interactions[user_id, :] == 0)[0]
+        recom_ids = np.argsort(ratings)[::-1]
+        recom_rates = np.array(sorted(ratings))[::-1]
 
         recom_ids = self.movie_encoder.inverse_transform(recom_ids)
 
