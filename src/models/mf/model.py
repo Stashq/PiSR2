@@ -138,7 +138,7 @@ class MatrixFactorization(nn.Module, Recommender):
 
         movies = set(range(len(self.movie_encoder.classes_)))
         movies_seen = self.pandas_dataframe_reindexed[
-            self.pandas_dataframe_reindexed.userId == 1
+            self.pandas_dataframe_reindexed.userId == user_id
         ].movieId
 
         movies -= set(movies_seen)
