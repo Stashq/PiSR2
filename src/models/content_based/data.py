@@ -14,11 +14,11 @@ column_list = [
     "adult",
     "budget",
     "popularity",
-    "runtime",
+#    "runtime",
     "vote_average",
     "vote_count",
     "original_language",
-    "belongs_to_collection",
+ #   "belongs_to_collection",
     "spoken_languages",
     "genres",
 ]
@@ -27,16 +27,32 @@ EMBEDDING_PATH = Path("../data/emb.pkl")
 MOVIES_PATH = Path("../data/movies_metadata.csv")
 RATINGS_PATH = Path("../data/ratings_small.csv")
 
+def has_nan(df): #helper for debuging
+    for column in df.columns:
+        print(column,df[column].isnull().any())
+def cov(movies,ratings):
+    print("How many ratings in movies")
+    print(ratings.movieId.isin(movies.id).value_counts())
+    print("How many movies in ratings")
+    print(movies.id.isin(ratings.movieId).value_counts())
+    print(len(ratings.drop_duplicates("movieId").movieId))
 
 def get_dataset_eval(embeddings=False) -> pd.DataFrame:
     movies = pd.read_csv(MOVIES_PATH)
     ratings = pd.read_csv(RATINGS_PATH)
+
     to_drop = ["1997-08-20", "2012-09-29", "2014-01-01"]
     for drop_error in to_drop:
         movies = movies[movies.id != drop_error]
+
     movies.id = movies.id.astype("int64")
+
     dataset = ratings.merge(movies[column_list], left_on="movieId", right_on="id")
 
+    #has_nan(dataset)
+    #cov(movies,ratings)
+    #cov(dataset,ratings)
+    #cov(movies,dataset)
     dataset = dataset.dropna()
 
     budget_scaler = preprocessing.StandardScaler().fit(
@@ -53,13 +69,9 @@ def get_dataset_eval(embeddings=False) -> pd.DataFrame:
 
     adult_encoder = preprocessing.LabelEncoder().fit(dataset.adult)
 
-    belongs_to_collection_encoder = preprocessing.LabelEncoder().fit(
-        dataset.belongs_to_collection
-    )
+    #belongs_to_collection_encoder = preprocessing.LabelEncoder().fit(    dataset.belongs_to_collection)
 
-    dataset.belongs_to_collection = belongs_to_collection_encoder.transform(
-        dataset.belongs_to_collection
-    )
+    #dataset.belongs_to_collection = belongs_to_collection_encoder.transform(dataset.belongs_to_collection)
     dataset.original_language = lang_encoder.transform(dataset.original_language)
     dataset.adult = adult_encoder.transform(dataset.adult)
     dataset.spoken_languages = spoken_languages_encoder.transform(
@@ -111,3 +123,13 @@ def get_dataset():
     dataset_tensor_test = TensorDataset(test, target_test)
 
     return dataset_tensor_train, dataset_tensor_test
+
+def get_discretized_dataset():
+    dataset = get_dataset_eval(True)
+    train_ratings, test_ratings = get_train_test_ratings(dataset)
+
+    rating_discretizer = RatingDiscretizer()
+    train_ratings = rating_discretizer.fit_transform(train_ratings)
+    test_ratings = rating_discretizer.transform(test_ratings)
+
+

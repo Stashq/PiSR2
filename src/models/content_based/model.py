@@ -92,10 +92,10 @@ class ContentBaseRecommenderSystem(nn.Module, Recommender):
         df_vector = df.vector.loc[0]
         x_input = torch.Tensor(df_features.values)
         vec_input = torch.Tensor(list(df_vector))
-
-        input = torch.cat((x_input, vec_input), dim=0)
-
-        prediction = self.forward(input).item()
+        input = torch.cat((x_input, vec_input), dim=0).to(DEVICE)
+        with torch.no_grad():
+            prediction = self.forward(input).item()
+            prediction = prediction.to("cpu").detach().numpy()
         return prediction
 
     def predict_scores(self, user_id: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -113,17 +113,24 @@ class ContentBaseRecommenderSystem(nn.Module, Recommender):
             Ranked movies with their scores.
         """
         df = self.movies.copy()
+       # print('inside normal df', len(df.index))
+        #df = df[df.userId != user_id]
         df.userId = user_id
-
+        #print('inside userId df', len(df.index))
         df = df.drop_duplicates("movieId")
+      #  print('after duplicates drop df', len(df.index))
         movieIds = df.movieId.values
         df_features = df.drop(["movieId", "rating", "vector"], axis=1)
+
+
         df_vector = df.vector.values
+      #  print('inside' ,len(movieIds))
         x_input = torch.Tensor(df_features.values)
         vec_input = torch.Tensor(list(df_vector))
-        input = torch.cat((x_input, vec_input), dim=1)
-
-        prediction = self.forward(input).detach().numpy()
+        input = torch.cat((x_input, vec_input), dim=1).to(DEVICE)
+        with torch.no_grad():
+            prediction = self.forward(input)
+            prediction = prediction.to("cpu").detach().numpy()
 
         ranking = pd.DataFrame(zip(movieIds, prediction), columns=["movie", "rating"])
 
