@@ -160,5 +160,6 @@ def rmse(
 
     e = np.array(predicted) - test_ratings.rating.values
     se = e ** 2
+    se = se[~np.isnan(se)]
     rmse = se.mean() ** 0.5
     return rmse
