@@ -88,14 +88,17 @@ class ContentBaseRecommenderSystem(nn.Module, Recommender):
         df = self.movies.copy()
 
         df = df.loc[df["movieId"] == movie_id]
-        df_features = df.drop(["movieId", "rating", "vector"], axis=1).loc[0]
-        df_vector = df.vector.loc[0]
+        if df.empty:
+            return np.nan
+        #print(df.head(1))
+        df_features = df.drop(["movieId", "rating", "vector"], axis=1).iloc[0]
+        df_vector = df.vector.iloc[0]
         x_input = torch.Tensor(df_features.values)
         vec_input = torch.Tensor(list(df_vector))
         input = torch.cat((x_input, vec_input), dim=0).to(DEVICE)
         with torch.no_grad():
             prediction = self.forward(input).item()
-            prediction = prediction.to("cpu").detach().numpy()
+            #prediction = prediction.to("cpu").detach().numpy()
         return prediction
 
     def predict_scores(self, user_id: int) -> Tuple[np.ndarray, np.ndarray]:
