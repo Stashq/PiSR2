@@ -55,13 +55,15 @@ class RNNRatings(nn.Module, Recommender):
         # )
 
         self.gru1 = nn.GRU(
-            input_size=self.N_FACTORS * 2, hidden_size=self.N_FACTORS * 2, num_layers=1
+            input_size=self.N_FACTORS * 2,
+            hidden_size=self.N_FACTORS * 2,
+            num_layers=1
         )
 
-        self.linear1 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS)
-        self.dropout1 = nn.Dropout(p=0.1)
+        self.linear1 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS * 2)
+        self.dropout1 = nn.Dropout(p=0.2)
 
-        self.linear2 = nn.Linear(self.N_FACTORS, self.N_FACTORS)
+        self.linear2 = nn.Linear(self.N_FACTORS * 2, self.N_FACTORS)
         self.dropout2 = nn.Dropout(p=0.1)
 
         self.linear3 = nn.Linear(self.N_FACTORS, 1)
