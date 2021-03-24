@@ -1,3 +1,4 @@
+import itertools
 from typing import List, Tuple
 
 import numpy as np
@@ -38,7 +39,7 @@ def mean_reciprocal_rank(
 
 
 def mean_average_precision(
-    test_discretized_ratings: pd.DataFrame, model: Recommender, N: int
+    test_discretized_ratings: pd.DataFrame, model: Recommender, N: int = 10
 ) -> Tuple[float, List[float]]:
     """
     Calculate mean average precision.
@@ -61,53 +62,36 @@ def mean_average_precision(
     ranks = []
     test_discretized_ratings = test_discretized_ratings.groupby("userId")
     iterator = tqdm(test_discretized_ratings, desc="Testing predictions")
-    for user_id, user_ratings in iterator:
-        pred_movies = model.predict(user_id)[:N]
-        N_user_favourites = user_ratings[user_ratings["liked"]]
-        N_user_favourites = N_user_favourites.sort_values(by="rating", ascending=False)
-        N_user_favourites = N_user_favourites["movieId"].values
 
-        user_score = get_user_AP_score(pred_movies, N_user_favourites, N)
-        ranks.append(user_score)
+    for user_id, user_ratings in iterator:
+        pred_movies = model.predict(user_id)
+
+        test_movies = set(user_ratings["movieId"].values)
+        test_liked_movies = set(user_ratings[user_ratings["liked"]]["movieId"].values)
+
+        pred_movies = [
+            pred_movie in test_liked_movies
+            for pred_movie in pred_movies
+            if pred_movie in test_movies
+        ]
+
+        pred_movies = pred_movies[:N]
+        pred_relevancy = np.nonzero(pred_movies)[0]
+
+        average_precisions = []
+
+        for index, rank in enumerate(pred_relevancy):
+            average_precision = (index + 1) / (rank + 1)
+            average_precisions.append(average_precision)
+
+        average_precision = 0
+
+        if average_precisions:
+            average_precision = np.mean(average_precisions)
+
+        ranks.append(average_precision)
 
     return np.mean(ranks), ranks
-
-
-def get_user_AP_score(
-    pred_movies: List[int], N_user_favourites: List[int], N: int
-) -> float:
-    """Calculate average precision for user.
-
-    Parameters
-    ----------
-    pred_movies : List[int]
-        Sorted (descending) list of movies predicted by model for user to recommend.
-    N_user_favourites : List[int]
-        Most favourite user N movies.
-    N : int
-        Number of movies taken into account in recommendation for single user.
-
-    Returns
-    -------
-    float
-        Average precision for user recommendation.
-    """
-    if N > len(pred_movies):
-        N = len(pred_movies)
-    sublist_scores = []
-    for sublist_len in range(1, N + 1):
-        n_correct = 0
-        for i, movie_id in enumerate(reversed(pred_movies[:sublist_len])):
-            if i == 0 and movie_id not in N_user_favourites:
-                break
-            if movie_id in N_user_favourites:
-                n_correct += 1
-        if n_correct != 0:
-            sublist_scores.append(n_correct / sublist_len)
-    if len(sublist_scores) == 0:
-        return 0.0
-    else:
-        return np.mean(sublist_scores)
 
 
 def mean_ndcg(
@@ -143,16 +127,20 @@ def coverage(
 
     predicted = []
     all_movies = pd.unique(test_discretized_ratings["movieId"])
-
     test_discretized_ratings = test_discretized_ratings.groupby("userId")
+
     iterator = tqdm(test_discretized_ratings, desc="Testing predictions")
+
     for user_id, user_ratings in iterator:
         pred_movies = model.predict(user_id)
+        pred_movies = set(pred_movies)
+        user_movies = set(user_ratings["movieId"].values)
+        pred_movies = pred_movies & user_movies
+
         predicted.append(pred_movies)
 
-    predicted_flattened = [p for sublist in predicted for p in sublist]
-    unique_predictions = len(set(predicted_flattened))
-    prediction_coverage = round(unique_predictions / (len(all_movies) * 1.0), 2)
+    unique_predictions = set(itertools.chain.from_iterable(predicted))
+    prediction_coverage = len(unique_predictions) / (len(all_movies))
     return prediction_coverage
 
 
